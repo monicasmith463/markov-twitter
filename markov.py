@@ -66,19 +66,7 @@ def make_text(chains):
     return text
 
 
-def tweet(chains):
-    """Create a tweet and send it to the Internet."""
-
-    # Use Python os.environ to get at environmental variables
-    # Note: you must run `source secrets.sh` before running this file
-    # to make sure these environmental variables are set.
-    user_input = None
-    while not user_input:
-        print "Press enter to tweet again, \'q\' to quit"
-        user_input = raw_input('>')
-        if user_input == 'q':
-            return
-        print make_text(chains)
+        
 
 api = twitter.Api(
     consumer_key=os.environ['TWITTER_CONSUMER_KEY'],
@@ -87,8 +75,37 @@ api = twitter.Api(
     access_token_secret=os.environ['TWITTER_ACCESS_TOKEN_SECRET']
     )
 
-print api.VerifyCredentials()
 
+
+def tweet(chains):
+    """Create a tweet and send it to the Internet."""
+
+    # Use Python os.environ to get at environmental variables
+    # Note: you must run `source secrets.sh` before running this file
+    # to make sure these environmental variables are set.
+    user_input = None
+    while user_input != 'q':
+        print "Press enter to generate a tweet, or type in your own. Embarrassed by your most recent tweet? Enter 'delete' to delete. Enter \'q\' to quit"
+        user_input = raw_input('>')
+
+        if user_input == 'q':
+            return
+
+        recent_status = api.GetHomeTimeline()
+        recent_status_id = recent_status[0].id
+        recent_status_text = recent_status[0].text
+        
+        if not user_input:
+            tweet = make_text(chains)
+            api.PostUpdate(tweet)
+            print "Check your profile! Your Markov tweet has been posted."
+        elif user_input == 'delete':
+            api.DestroyStatus(recent_status_id)
+            print "Tweet deleted! You're welcome!"
+        else:
+            tweet = user_input
+            api.PostUpdate(tweet)
+            print "Check your profile! Your custom tweet has been posted."
 
 # Get the filenames from the user through a command line prompt, ex:
 # python markov.py green-eggs.txt shakespeare.txt
@@ -100,10 +117,22 @@ text = open_and_read_file(filenames)
 # Get a Markov chain
 chains = make_chains(text)
 
+tweet(chains)
+
 # Your task is to write a new function tweet, that will take chains as input
 # tweet(chains)
+recent_status = api.GetHomeTimeline()
+recent_status_id = recent_status[0].id
+recent_status_text = recent_status[0].text
+# api.GetStatus(recent_status_id)
 
-new_tweet = make_text(chains)
+print recent_status_text
 
-status = api.PostUpdate(new_tweet)
-print status.text
+# tweet1 = make_text(chains)
+
+# status1 = api.PostUpdate(tweet1)
+# # status1_id = status1.id
+
+# # get_tweet1 = api.GetStatus(status1_id)
+
+# print status1.text
